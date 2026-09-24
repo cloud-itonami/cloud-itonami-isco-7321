@@ -1,5 +1,5 @@
 (ns prepresstech.governor-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [prepresstech.store :as store]
             [prepresstech.advisor :as advisor]
             [prepresstech.governor :as governor]))
