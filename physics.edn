@@ -1,0 +1,43 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:physics` runs it.
+;;
+;; README "Robotics premise": a workshop scheduling/logistics coordination
+;; robot handles crew scheduling, job/materials-usage records and plate/
+;; imaging-materials supply orders for a pre-press crew (ISCO 7321). Its
+;; physical work: carrying stacks of printing plates to the press room,
+;; loading a plate into the platesetter, and the developer recirculation of
+;; the plate processor.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isco-7321"
+ :cases
+ [{:id :plate-stack-to-pressroom
+   :kind :transport
+   :procedure "cart carries a stack of imaged aluminium plates from pre-press to the press room"
+   :params {:mass-kg 60.0 :distance-m 40.0 :v-max-mps 1.2 :a-max-mps2 0.5
+            :brake-decel-mps2 0.8 :drive-force-n 140.0 :crr 0.015
+            :cog-height-m 0.50 :support-half-length-m 0.35 :max-time-s 1200.0}
+   :sweep {:param :payload-kg :values [10.0 50.0 100.0 200.0 350.0]}
+   :quantity :cycle-time-s
+   :limit {:max 45.0 :basis "estimate: plates must reach the press before the make-ready slot; one leg budgeted at 45 s"}
+   :boundary {:lo 5.0 :hi 1500.0}}
+  {:id :plate-into-platesetter
+   :kind :manipulator
+   :procedure "arm lifts a plate from the stack and feeds it into the platesetter's loading table"
+   :params {:l1-m 0.50 :l2-m 0.45 :m1-kg 5.0 :m2-kg 4.0
+            :from [0.45 0.05] :to [0.75 0.40] :duration-s 2.0 :steps 500}
+   :sweep {:param :payload-kg :values [0.3 0.8 1.5 2.5 4.0]}
+   :quantity :peak-tau1-nm
+   :limit {:max 60.0 :basis "estimate: continuous shoulder torque of a light collaborative arm (~5 kg class)"}
+   :boundary {:lo 0.1 :hi 20.0}}
+  {:id :developer-recirculation
+   :kind :pipe-flow
+   :procedure "plate processor pump recirculates developer through the 12 mm spray-bar circuit"
+   :params {:diameter-m 0.012 :length-m 4.0 :roughness-m 1.5e-6
+            :density-kg-m3 1050.0 :viscosity-pa-s 1.2e-3 :pump-efficiency 0.40 :elevation-m 0.5}
+   :sweep {:param :q-m3s :values [0.00005 0.0001 0.00015 0.0002 0.0003]}
+   :quantity :pump-power-w
+   :limit {:max 40.0 :basis "estimate: shaft power of the small magnetic-drive pump typical of a plate processor"}
+   :boundary {:lo 0.00001 :hi 0.001}}]}
